@@ -13,7 +13,8 @@ class Predictor(object):
         ckpt = torch.load(ckpt_path, map_location='cpu')
         self.vpi_rec_model = VPIRecBySAM(sam_type='vit_b', 
                                          rand_crop_size=[depth, patch_size, patch_size],
-                                         num_classes=3
+                                         num_classes=3,
+                                         sam_ckpt='./model_files/sam_vit_b_01ec64.pth',
                                          )
 
         self.vpi_rec_model.load_state_dict(ckpt['state_dict'])
@@ -63,9 +64,9 @@ class Predictor(object):
 
 
 if __name__ == '__main__':
-    ckpt_path = '/mnt/d/ai_dev/ct_model/all_outputs/lung_vpi_sam_cls3_cocojson/checkpoint/model_latest.pth'
+    ckpt_path = 'all_outputs/lung_vpi_sam_cls3_cocojson_all/checkpoint/model_best.pth'
     predictor = Predictor(ckpt_path, device='cuda:0')
-    img_dir = '/mnt/d/ai_dev/ct_model/data/dataset/dcm_stage1_30samples/10'
+    img_dir = '/data1/zjx/medical/ct_model/data/dataset/dcm_stage1_30samples/10'
     points = [293, 299, 32]  # x, y, z
     masks = predictor(img_dir, points)
 

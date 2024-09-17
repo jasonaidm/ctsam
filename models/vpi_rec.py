@@ -87,7 +87,10 @@ class VPIRecBySAM(nn.Module):
         
         batch_features, feature_list = self.img_encoder(input_data)
         feature_list.append(batch_features)
-        points = self.get_points(batch['seg'])  # 缺失seg
+        if 'seg' in batch:
+            points = self.get_points(batch['seg']) 
+        else:  # 缺失seg
+            points = batch['points_torch']
         new_feature = []
         for i, feature in enumerate(feature_list):
             if i == 3:   # 位置prompt编码
