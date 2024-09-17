@@ -1,0 +1,105 @@
+name: &name lung_vpi_sam_cls3_cocojson_all_v4
+train_module: SegTrainer
+arch:
+  type: VPIRecBySAM
+  model_type: cls
+  depth_size: &depth_size 48
+  args:
+    sam_type: vit_b
+    sam_ckpt: ./model_files/sam_vit_b_01ec64.pth
+    rand_crop_size: [*depth_size, 128, 128]
+    num_classes: &num_classes 3
+
+post_processing: null
+metric:
+  type: ClsMetric
+loss:
+  type: DiceCELoss
+  include_background: true
+  softmax: true
+  to_onehot_y: true
+  lambda_dice: 0.8
+  lambda_ce: 0.2
+optimizer:
+  type: Adam
+  is_save: true
+  args:
+    lr: 0.00005
+    weight_decay: 0
+    amsgrad: true
+lr_scheduler:
+  type: WarmupPolyLR
+  args:
+    warmup_epoch: 3
+trainer:
+  seed: 2
+  epochs: 100
+  log_iter: 10
+  show_images_iter: 1
+  resume_checkpoint: ''
+  finetune_checkpoint: ''
+  output_dir: &output_dir all_outputs 
+  tensorboard: false
+dataset:
+  train:
+    dataset:
+      type: DCMWithCOCOLabelDataset
+      args:
+        data_path: ./data/dataset/all_samples/annotations/train_ct_all.json
+        # dcm_folder: ./data/dataset/dcm_stage1_30samples
+        img_folder: /data1/zjx/medical/dataset/images
+        vol_size: *depth_size
+        gt_vol_size: 4
+        num_classes: *num_classes
+        img_size: 512
+        img_mode: &img_mode GRAY
+        filter_keys: ['owner_id', 'dcm_file_list', 'label_list']
+        pre_processes: 
+          - type: ImgAugment
+            args: 
+              img_size: 512
+          - type: VolumeCrop
+            args: 
+              crop_size: 128
+          - type: Transform3D
+            args: 
+              mean: [0.456]
+              std: [0.224]
+          
+    loader:
+      batch_size: 1
+      shuffle: true
+      pin_memory: true
+      num_workers: 1
+      collate_fn: VolDetCollectFN
+  validate:
+    dataset:
+      type: DCMWithCOCOLabelDataset
+      args:
+        data_path: ./data/dataset/all_samples/annotations/val_ct_all.json
+        img_folder: /data1/zjx/medical/dataset/images
+        vol_size: *depth_size
+        gt_vol_size: 4
+        num_classes: *num_classes
+        img_size: 512
+        img_mode: *img_mode
+        filter_keys: ['owner_id', 'dcm_file_list', 'label_list']
+        pre_processes: 
+          - type: ImgAugment
+            args: 
+              img_size: 512
+          - type: VolumeCrop
+            args: 
+              crop_size: 128
+          - type: Transform3D
+            args: 
+              mean: [0.456]
+              std: [0.224]
+
+    loader:
+      batch_size: 1
+      shuffle: false
+      pin_memory: true
+      num_workers: 1
+      collate_fn: VolDetCollectFN
+

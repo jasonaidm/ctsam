@@ -1,0 +1,6 @@
+pydicom==2.4.3
+anyconfig
+#albumentations
+loguru
+monai==1.2.0
+segment-anything==1.0
